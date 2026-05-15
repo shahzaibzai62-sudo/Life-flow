@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", var(--font-sans);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary: #4F46E5;
+  --color-primary-foreground: #ffffff;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+  --radius-4xl: 3rem;
+  --radius-5xl: 4rem;
+  
+  --animate-float: float 3s ease-in-out infinite;
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+    font-size: 14px;
+  }
+  
+  @media (min-width: 640px) {
+    html { font-size: 15px; }
+  }
+  @media (min-width: 768px) {
+    html { font-size: 16px; }
+  }
+  @media (min-width: 1024px) {
+    html { font-size: 17px; }
+  }
+  @media (min-width: 1280px) {
+    html { font-size: 18px; }
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-500 overflow-x-hidden;
+  }
+  
+  .dark body {
+    @apply bg-[#020617] text-slate-200;
+  }
+
+  /* Smooth transition for all theme-dependent properties */
+  .theme-transition,
+  .theme-transition * {
+    @apply transition-colors duration-500 ease-in-out;
+  }
+}
+
+@layer components {
+  .premium-card {
+    @apply bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/60 rounded-[2rem] shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 backdrop-blur-sm;
+  }
+  
+  .glass-card {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 rounded-[2.5rem] shadow-sm;
+  }
+
+  .nav-blur {
+    @apply bg-white/80 dark:bg-[#020617]/80 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900/50 transition-colors duration-500;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-primary to-indigo-400;
+  }
+}
+
