@@ -1,11 +1,12 @@
+const BASE_URI = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1);
 const CACHE_NAME = 'lifeflow-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/favicon.ico'
+  BASE_URI,
+  `${BASE_URI}index.html`,
+  `${BASE_URI}manifest.json`,
+  `${BASE_URI}icon-192.png`,
+  `${BASE_URI}icon-512.png`,
+  `${BASE_URI}favicon.ico`
 ];
 
 // Install Event - Pre-cache the main shell assets
@@ -78,7 +79,7 @@ self.addEventListener('fetch', (event) => {
           // If offline and request is for a document/page, return the cached index.html
           const acceptHeader = event.request.headers.get('accept');
           if (acceptHeader && acceptHeader.includes('text/html')) {
-            return caches.match('/index.html');
+            return caches.match(`${BASE_URI}index.html`);
           }
         });
       })
