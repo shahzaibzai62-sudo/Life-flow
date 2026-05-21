@@ -34,7 +34,10 @@ import {
   HardDrive,
   Eraser,
   Power,
-  ChevronLeft
+  ChevronLeft,
+  PlusSquare,
+  Compass,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, isSameDay, startOfToday, addDays, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, addMonths, subMonths } from 'date-fns';
@@ -249,10 +252,23 @@ const categoryIcons:Record<Category, any> = {
 };
 
 // --- Optimized Components with Memo ---
-const TabHome = React.memo(({ routines, setRoutines, tasks, toggleTask, reminders, setReminders, lists }: any) => {
+const TabHome = React.memo(({ routines, setRoutines, tasks, toggleTask, reminders, setReminders, lists, onSeeAllRoutines }: any) => {
   const { addToast } = useToast();
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayTasks = tasks.filter((t: any) => t.date === today);
+  
+  const remindersRef = React.useRef<HTMLDivElement>(null);
+  
+  const scrollReminders = (direction: 'left' | 'right') => {
+    if (remindersRef.current) {
+      const scrollAmount = 200;
+      remindersRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const progress = useMemo(() => {
     if (todayTasks.length === 0) return 0;
     return Math.round((todayTasks.filter((t: any) => t.completed).length / todayTasks.length) * 100);
@@ -348,8 +364,8 @@ const TabHome = React.memo(({ routines, setRoutines, tasks, toggleTask, reminder
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold dark:text-white">Daily Routines</h3>
           <button 
-            onClick={() => addToast("You are tracking all your routines here!", "info")}
-            className="text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:underline"
+            onClick={onSeeAllRoutines}
+            className="text-indigo-600 dark:text-indigo-400 text-sm font-semibold hover:underline cursor-pointer"
           >
             See all
           </button>
@@ -429,10 +445,30 @@ const TabHome = React.memo(({ routines, setRoutines, tasks, toggleTask, reminder
       {/* Reminders */}
       <motion.section variants={itemVariants} className="px-4 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold dark:text-white">Reminders</h3>
-          <Bell size={20} className="text-slate-400" />
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-bold dark:text-white">Reminders</h3>
+            <Bell size={18} className="text-slate-400 dark:text-slate-500" />
+          </div>
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
+            <button 
+              type="button"
+              onClick={() => scrollReminders('left')}
+              className="p-1.5 hover:bg-white dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-600 rounded-lg transition-all text-xs font-black cursor-pointer shadow-sm shadow-transparent hover:shadow-slate-200/50"
+              title="Slide Left"
+            >
+              ←
+            </button>
+            <button 
+              type="button"
+              onClick={() => scrollReminders('right')}
+              className="p-1.5 hover:bg-white dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-600 rounded-lg transition-all text-xs font-black cursor-pointer shadow-sm shadow-transparent hover:shadow-slate-200/50"
+              title="Slide Right"
+            >
+              →
+            </button>
+          </div>
         </div>
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+        <div ref={remindersRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-2 scroll-smooth">
           {reminders.map((reminder: any) => (
             <Card 
               key={reminder.id} 
@@ -594,7 +630,7 @@ const TabTasks = React.memo(({ tasks, setTasks }: any) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 pb-24 h-full"
+      className="space-y-6 pb-24"
     >
       <motion.header variants={itemVariants} className="px-6 flex justify-between items-end">
         <div>
@@ -1043,7 +1079,7 @@ const TabLists = React.memo(({ lists, setLists }: any) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 pb-24 h-full"
+      className="space-y-6 pb-24"
     >
       <motion.header variants={itemVariants} className="px-6 flex justify-between items-end">
         <div>
@@ -1265,7 +1301,7 @@ const TabSchedule = React.memo(({ tasks, toggleTask }: any) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 pb-24 px-6 h-full flex flex-col"
+      className="space-y-6 pb-24 px-6"
     >
       <motion.header variants={itemVariants} className="flex justify-between items-end">
         <div>
@@ -1322,7 +1358,7 @@ const TabSchedule = React.memo(({ tasks, toggleTask }: any) => {
       </motion.div>
 
       {/* Daily Tasks */}
-      <div className="flex-1 min-h-0 flex flex-col gap-4">
+      <div className="space-y-4">
         <motion.div variants={itemVariants} className="flex justify-between items-center px-1">
           <h3 className="text-lg font-bold dark:text-white">
             {isSameDay(selectedDate, new Date()) ? 'Today' : format(selectedDate, 'MMMM d')}
@@ -1330,7 +1366,7 @@ const TabSchedule = React.memo(({ tasks, toggleTask }: any) => {
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tasksForSelectedDate.length} Tasks</span>
         </motion.div>
         
-        <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {tasksForSelectedDate.length === 0 ? (
             <motion.div variants={itemVariants} className="col-span-full text-center py-10">
               <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-200 dark:text-slate-800 mx-auto mb-3">
@@ -1455,7 +1491,7 @@ const TabReminders = React.memo(({ reminders, setReminders }: any) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 pb-24 h-full px-6"
+      className="space-y-6 pb-24 px-6"
     >
       <motion.header variants={itemVariants} className="flex justify-between items-end">
         <div>
@@ -1636,7 +1672,7 @@ const TabInsights = ({ tasks }: any) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 pb-24 px-4 h-full overflow-y-auto"
+      className="space-y-8 pb-24 px-4"
     >
       <motion.header variants={itemVariants}>
         <h2 className="text-3xl font-bold dark:text-white">Insights</h2>
@@ -1729,7 +1765,19 @@ const itemVariants = {
 
 // --- Settings Tab ---
 
-const TabSettings = ({ isDarkMode, setIsDarkMode, tasks, setTasks, reminders, lists, routines }: any) => {
+const TabSettings = ({ 
+  isDarkMode, 
+  setIsDarkMode, 
+  tasks, 
+  setTasks, 
+  reminders, 
+  setReminders, 
+  lists, 
+  routines, 
+  deferredPrompt, 
+  setDeferredPrompt,
+  showConfirm
+}: any) => {
   const { addToast } = useToast();
   const [compactMode, setCompactMode] = useState(false);
 
@@ -1745,9 +1793,14 @@ const TabSettings = ({ isDarkMode, setIsDarkMode, tasks, setTasks, reminders, li
   }, [tasks, reminders, lists, routines]);
 
   const clearCompleted = () => {
-    if (confirm('Clear all completed tasks?')) {
-      setTasks(tasks.filter((t: any) => !t.completed));
-    }
+    showConfirm(
+      'Clear Completed Tasks?',
+      'Are you sure you want to delete all completed tasks? This action cannot be undone.',
+      () => {
+        setTasks(tasks.filter((t: any) => !t.completed));
+        addToast("Completed tasks cleared.", "info");
+      }
+    );
   };
 
   const requestPermission = async () => {
@@ -1766,7 +1819,7 @@ const TabSettings = ({ isDarkMode, setIsDarkMode, tasks, setTasks, reminders, li
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 pb-32 px-6 h-full overflow-y-auto no-scrollbar"
+      className="space-y-8 pb-32 px-6"
     >
       <motion.header variants={itemVariants}>
         <h2 className="text-3xl font-bold dark:text-white">Settings</h2>
@@ -1902,7 +1955,16 @@ const TabSettings = ({ isDarkMode, setIsDarkMode, tasks, setTasks, reminders, li
         <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-2">Danger Zone</h4>
         <button 
           className="w-full flex items-center gap-3 p-4 bg-rose-500 rounded-2xl text-white shadow-xl shadow-rose-500/20 active:scale-95 transition-all font-bold"
-          onClick={() => { if(confirm('Are you sure you want to log out and reset data?')) { localStorage.clear(); window.location.reload(); } }}
+          onClick={() => {
+            showConfirm(
+              'Reset All App Data?',
+              'Are you sure you want to log out and reset all your data? This will permanently delete your custom tasks, lists, daily routines, reminders, and dark mode configuration.',
+              () => {
+                localStorage.clear();
+                window.location.reload();
+              }
+            );
+          }}
         >
           <Power size={20} />
           <span>Reset All App Data</span>
@@ -1932,6 +1994,49 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [isDarkMode, setIsDarkMode] = useState(() => Storage.get('darkMode', true));
   const [activeNotification, setActiveNotification] = useState<AppNotification | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // Custom Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmDialog({
+      show: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(prev => ({ ...prev, show: false }));
+      }
+    });
+  };
+  
+  // Spotlight and Routine Modal States
+  const [showSpotlight, setShowSpotlight] = useState(false);
+  const [spotlightQuery, setSpotlightQuery] = useState('');
+  const [showRoutinesModal, setShowRoutinesModal] = useState(false);
+  const [newRoutineTitle, setNewRoutineTitle] = useState('');
+  const [newRoutineTime, setNewRoutineTime] = useState('08:00');
+  const [newRoutineDays, setNewRoutineDays] = useState<number[]>([1,2,3,4,5]);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
 
   // State Management
   useEffect(() => {
@@ -1982,6 +2087,15 @@ export default function App() {
   // Persistence
   useEffect(() => Storage.set('darkMode', isDarkMode), [isDarkMode]);
   
+  const todayTasksStats = useMemo(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const todayTasks = tasks.filter((t: any) => t.date === today);
+    const completed = todayTasks.filter((t: any) => t.completed).length;
+    const total = todayTasks.length;
+    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { completed, total, pct };
+  }, [tasks]);
+
   // Database Sync
   useEffect(() => { Database.saveAll(Table.TASKS, tasks); }, [tasks]);
   useEffect(() => { Database.saveAll(Table.REMINDERS, reminders); }, [reminders]);
@@ -2090,6 +2204,121 @@ export default function App() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
 
+  // Keyboard Event Handlers for Spotlight & Esc closing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSpotlight(prev => !prev);
+      }
+      if (e.key === 'Escape') {
+        setShowSpotlight(false);
+        setShowRoutinesModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Spotlight Filters Matching
+  const filteredSpotlightItems = useMemo(() => {
+    if (!spotlightQuery.trim()) return [];
+    const query = spotlightQuery.toLowerCase();
+    
+    const matchedTasks = tasks.filter(t => t.title.toLowerCase().includes(query)).map(t => ({
+      ...t,
+      type: 'task',
+      icon: ListTodo,
+      color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+    }));
+
+    const matchedRoutines = routines.filter(r => r.title.toLowerCase().includes(query)).map(r => ({
+      ...r,
+      type: 'routine',
+      icon: Clock,
+      color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20'
+    }));
+
+    const matchedReminders = reminders.filter(rem => rem.title.toLowerCase().includes(query)).map(rem => ({
+      ...rem,
+      type: 'reminder',
+      icon: Bell,
+      color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20'
+    }));
+
+    const matchedLists = lists.filter(l => l.title.toLowerCase().includes(query)).map(l => ({
+      ...l,
+      type: 'list',
+      icon: ShoppingCart,
+      color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+    }));
+
+    return [...matchedTasks, ...matchedRoutines, ...matchedReminders, ...matchedLists];
+  }, [spotlightQuery, tasks, routines, reminders, lists]);
+
+  // Handle Spotlight Action
+  const handleSpotlightAction = (item: any) => {
+    if (item.type === 'task') {
+      toggleTask(item.id);
+      addToast(item.completed ? "Task set to active!" : "Task completed!", "success");
+    } else if (item.type === 'routine') {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      setRoutines(prev => prev.map((r: any) => {
+        if (r.id === item.id) {
+          const isCompletedToday = r.completed.includes(today);
+          return {
+            ...r,
+            completed: isCompletedToday 
+              ? r.completed.filter((d: string) => d !== today)
+              : [...r.completed, today]
+          };
+        }
+        return r;
+      }));
+      addToast("Routine updated!", "success");
+    } else if (item.type === 'reminder') {
+      setActiveTab('reminders');
+      setShowSpotlight(false);
+      setSpotlightQuery('');
+    } else if (item.type === 'list') {
+      setActiveTab('lists');
+      setShowSpotlight(false);
+      setSpotlightQuery('');
+    }
+  };
+
+  // Manage Routines Logic
+  const handleCreateRoutine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoutineTitle.trim()) {
+      addToast("Please enter a routine title!", "error");
+      return;
+    }
+    const newRoutine: Routine = {
+      id: Date.now().toString(),
+      title: newRoutineTitle.trim(),
+      time: newRoutineTime,
+      days: newRoutineDays,
+      completed: []
+    };
+    setRoutines(prev => [...prev, newRoutine]);
+    setNewRoutineTitle('');
+    setNewRoutineTime('08:00');
+    setNewRoutineDays([1,2,3,4,5]);
+    addToast("New daily routine added! 🚀", "success");
+  };
+
+  const handleDeleteRoutine = (id: string) => {
+    showConfirm(
+      "Delete Routine?",
+      "Are you sure you want to delete this daily routine? Your completed logs for it will be removed permanently.",
+      () => {
+        setRoutines(prev => prev.filter(r => r.id !== id));
+        addToast("Routine deleted.", "info");
+      }
+    );
+  };
+
   const navItems = [
     { id: 'home', icon: LayoutGrid, label: 'Home' },
     { id: 'tasks', icon: ListTodo, label: 'Tasks' },
@@ -2102,25 +2331,24 @@ export default function App() {
 
   return (
     <ToastContext.Provider value={{ addToast }}>
-      <div className="min-h-screen bg-slate-100 dark:bg-[#010411] flex flex-col items-center justify-center sm:p-4 lg:p-12 font-sans selection:bg-primary/20 selection:text-primary theme-transition overflow-hidden select-none">
+      <div className="min-h-[100dvh] lg:h-screen bg-slate-50 dark:bg-[#01010a] flex flex-col lg:items-center lg:justify-center lg:p-8 font-sans selection:bg-primary/20 selection:text-primary theme-transition overflow-hidden">
         
         <AnimatePresence>
           {toasts.map(toast => (
             <Toast key={toast.id} toast={toast} onDismiss={() => {}} />
           ))}
         </AnimatePresence>
-
+ 
         <AnimatePresence>
           {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
           {activeNotification && <NotificationAlert notification={activeNotification} onDismiss={() => setActiveNotification(null)} onAction={onNotificationAction} />}
         </AnimatePresence>
-
-        {/* Main Container: Fluid Dashboard for Desktop, Phone Frame for Mobile */}
+ 
+        {/* Main Container: Fluid Dashboard for Desktop, Native Mobile Layout */}
         <div className={cn(
-          "w-full h-full flex flex-col lg:flex-row transition-all duration-700 ease-in-out",
-          "sm:max-w-[420px] sm:h-[840px] sm:rounded-[3.5rem] sm:border-[8px] border-slate-200 dark:border-slate-800",
-          "lg:max-w-[1400px] lg:h-[90vh] lg:rounded-[3rem] lg:border-none",
-          "bg-white dark:bg-[#020617]/95 backdrop-blur-3xl sm:shadow-[0_0_100px_rgba(0,0,0,0.1)] dark:sm:shadow-[0_0_100px_rgba(79,70,229,0.05)] overflow-hidden relative"
+          "w-full min-h-[100dvh] lg:min-h-0 lg:h-[85vh] flex flex-col lg:flex-row transition-all duration-700 ease-in-out",
+          "lg:max-w-[1400px] lg:rounded-[2.5rem] lg:border lg:border-slate-200/50 lg:dark:border-slate-800/85",
+          "bg-white dark:bg-[#020617] backdrop-blur-3xl lg:shadow-2xl relative overflow-hidden"
         )}>
           {/* Subtle Texture Overlay */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -2166,10 +2394,10 @@ export default function App() {
                   <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Daily Goal</p>
                   <div className="flex justify-between items-end">
                     <h4 className="font-bold">Progress</h4>
-                    <span className="text-[10px] font-bold">12/15</span>
+                    <span className="text-[10px] font-bold">{todayTasksStats.completed}/{todayTasksStats.total}</span>
                   </div>
                   <div className="h-1.5 w-full bg-white/20 rounded-full mt-3 overflow-hidden">
-                    <div className="h-full bg-white w-3/4 rounded-full" />
+                    <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${todayTasksStats.pct}%` }} />
                   </div>
                   <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-white/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700" />
               </div>
@@ -2186,29 +2414,35 @@ export default function App() {
 
           <div className="flex-1 flex flex-col min-w-0">
             {/* Top Bar (Mobile & Desktop) */}
-            <div className="h-24 lg:h-20 pt-6 lg:pt-0 shrink-0 flex items-center justify-between px-8 z-50 lg:border-b border-slate-100 dark:border-slate-800/30">
+            <div className="h-20 shrink-0 flex items-center justify-between px-6 sm:px-8 z-50 border-b border-slate-100/80 dark:border-slate-800/30">
               <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mb-0.5">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.25em] mb-0.5">
                   {format(new Date(), 'EEEE, MMM d')}
                 </span>
-                <h2 className="text-sm font-bold dark:text-slate-200 lg:hidden">LifeFlow</h2>
+                <h2 className="text-base font-extrabold dark:text-slate-100 lg:hidden flex items-center gap-1.5">
+                  <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                  LifeFlow
+                </h2>
               </div>
               
               <div className="flex items-center gap-3">
                 <button 
-                  onClick={() => addToast("Search feature is coming soon!", "info")}
-                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-400 hover:text-primary transition-colors border border-slate-200 dark:border-slate-800"
+                  onClick={() => setShowSpotlight(true)}
+                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-400 hover:text-primary transition-colors border border-slate-250/10 dark:border-slate-800/50 cursor-pointer"
                 >
                   <Search size={18} />
                 </button>
-                <button className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-400 hover:text-primary transition-colors border border-slate-200 dark:border-slate-800 lg:hidden">
-                  <Settings size={18} onClick={() => setActiveTab('settings')} />
+                <button 
+                  onClick={() => setActiveTab('settings')}
+                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-400 hover:text-primary transition-colors border border-slate-250/10 dark:border-slate-800/50 lg:hidden"
+                >
+                  <Settings size={18} />
                 </button>
               </div>
             </div>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-hidden relative">
+            <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -2216,16 +2450,41 @@ export default function App() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -20, opacity: 0 }}
                   transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                  className="h-full"
+                  className="flex-1 flex flex-col min-h-0"
                 >
-                  <div className="h-full overflow-y-auto no-scrollbar pb-32 sm:pb-40 lg:pb-12 lg:px-4">
-                    {activeTab === 'home' && <TabHome routines={routines} setRoutines={setRoutines} tasks={tasks} toggleTask={toggleTask} reminders={reminders} setReminders={setReminders} lists={lists} />}
+                  <div className="flex-1 overflow-y-auto pb-28 lg:pb-12 px-4 sm:px-6 lg:px-4 min-h-0 scroll-smooth">
+                    {activeTab === 'home' && (
+                      <TabHome 
+                        routines={routines} 
+                        setRoutines={setRoutines} 
+                        tasks={tasks} 
+                        toggleTask={toggleTask} 
+                        reminders={reminders} 
+                        setReminders={setReminders} 
+                        lists={lists} 
+                        onSeeAllRoutines={() => setShowRoutinesModal(true)} 
+                      />
+                    )}
                     {activeTab === 'tasks' && <TabTasks tasks={tasks} setTasks={setTasks} />}
                     {activeTab === 'schedule' && <TabSchedule tasks={tasks} toggleTask={toggleTask} />}
                     {activeTab === 'lists' && <TabLists lists={lists} setLists={setLists} />}
                     {activeTab === 'reminders' && <TabReminders reminders={reminders} setReminders={setReminders} />}
                     {activeTab === 'insights' && <TabInsights tasks={tasks} />}
-                    {activeTab === 'settings' && <TabSettings isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} tasks={tasks} setTasks={setTasks} reminders={reminders} lists={lists} routines={routines} />}
+                    {activeTab === 'settings' && (
+                      <TabSettings 
+                        isDarkMode={isDarkMode} 
+                        setIsDarkMode={setIsDarkMode} 
+                        tasks={tasks} 
+                        setTasks={setTasks} 
+                        reminders={reminders} 
+                        setReminders={setReminders} 
+                        lists={lists} 
+                        routines={routines} 
+                        deferredPrompt={deferredPrompt} 
+                        setDeferredPrompt={setDeferredPrompt} 
+                        showConfirm={showConfirm}
+                      />
+                    )}
                   </div>
                 </motion.div>
               </AnimatePresence>
@@ -2233,7 +2492,7 @@ export default function App() {
           </div>
 
           {/* Bottom Navigation (Mobile Only) */}
-          <nav className="absolute bottom-0 left-0 right-0 h-24 sm:h-28 nav-blur flex items-center justify-around px-4 pb-6 sm:pb-8 z-[100] lg:hidden">
+          <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white/90 dark:bg-[#020617]/90 backdrop-blur-md flex items-center justify-around px-4 pb-2 z-[100] lg:hidden w-full border-t border-slate-100 dark:border-slate-800/40 shadow-lg shadow-black/5 dark:shadow-black/20">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
@@ -2271,13 +2530,320 @@ export default function App() {
               );
             })}
           </nav>
-
-          {/* Notch / Handle (Mobile Only) */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-slate-900 dark:bg-black rounded-b-[24px] z-[200] flex items-center justify-center lg:hidden">
-            <div className="w-12 h-1 bg-white/10 rounded-full" />
-          </div>
         </div>
       </div>
+
+      {/* Spotlight Search Overlay */}
+      <AnimatePresence>
+        {showSpotlight && (
+          <motion.div 
+            id="spotlight-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-md z-[350] flex items-start justify-center pt-[10vh] px-4 select-none"
+            onClick={() => { setShowSpotlight(false); setSpotlightQuery(''); }}
+          >
+            <motion.div 
+              id="spotlight-modal"
+              initial={{ scale: 0.95, y: -20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: -20 }}
+              className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[70vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header Input */}
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                <Search className="text-slate-400 dark:text-slate-500 shrink-0" size={20} />
+                <input 
+                  id="spotlight-search-input"
+                  type="text"
+                  autoFocus
+                  placeholder="Search tasks, routines, reminders, lists..."
+                  value={spotlightQuery}
+                  onChange={(e) => setSpotlightQuery(e.target.value)}
+                  className="w-full bg-transparent border-none text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-0 text-sm py-2"
+                />
+                <kbd className="hidden sm:inline-block px-2 py-1 text-[10px] font-black text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                  ESC
+                </kbd>
+              </div>
+
+              {/* Results Container */}
+              <div className="flex-1 overflow-y-auto p-4 no-scrollbar space-y-3">
+                {spotlightQuery.trim() === '' ? (
+                  <div className="text-center py-10 space-y-2">
+                    <Search className="mx-auto text-slate-300 dark:text-slate-700" size={32} />
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">Search items across LifeFlow</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Type above to filter tasks, checklists, alarms, and routines instantly.</p>
+                  </div>
+                ) : filteredSpotlightItems.length === 0 ? (
+                  <div className="text-center py-10 space-y-2">
+                    <SearchX className="mx-auto text-slate-300 dark:text-slate-700" size={32} />
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">No results found for "{spotlightQuery}"</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Check spelling or try a different search phrase.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-2 mb-2">
+                      Search Results ({filteredSpotlightItems.length})
+                    </p>
+                    {filteredSpotlightItems.map((item: any) => (
+                      <button
+                        key={`${item.type}-${item.id}`}
+                        id={`spotlight-item-${item.type}-${item.id}`}
+                        onClick={() => handleSpotlightAction(item)}
+                        className="w-full text-left flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-800/40 hover:border-slate-200 dark:hover:border-slate-700/60 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-xl", item.color)}>
+                            <item.icon size={16} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-1 group-hover:text-primary transition-colors">
+                              {item.title}
+                            </p>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded">
+                              {item.type}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Interactive suffix indicators */}
+                        <div className="text-slate-400 group-hover:text-primary transition-colors text-[10px] font-bold">
+                          {item.type === 'task' && (
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full",
+                              item.completed ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                            )}>
+                              {item.completed ? 'Completed' : 'Active'}
+                            </span>
+                          )}
+                          {item.type === 'routine' && (
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                              Time: {item.time}
+                            </span>
+                          )}
+                          {(item.type === 'reminder' || item.type === 'list') && (
+                            <span className="flex items-center gap-1 text-primary">
+                              Open Tab <ChevronRight size={12} />
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Routine Manager Modal */}
+      <AnimatePresence>
+        {showRoutinesModal && (
+          <motion.div 
+            id="routines-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-md z-[350] flex items-center justify-center p-4 select-none"
+            onClick={() => setShowRoutinesModal(false)}
+          >
+            <motion.div 
+              id="routines-modal-content"
+              initial={{ scale: 0.95, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 30 }}
+              className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Daily Routines</h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">Meticulously manage your day and schedules</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRoutinesModal(false)}
+                  className="p-1 px-3 bg-slate-50 dark:bg-slate-800 text-slate-500 rounded-xl text-xs font-black cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Scrollable routines list */}
+              <div className="flex-1 overflow-y-auto no-scrollbar py-4 space-y-4">
+                {/* Lists */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Active Routines ({routines.length})</p>
+                  
+                  {routines.length === 0 ? (
+                    <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
+                      No routines configured. Add a new routine below to get started!
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {routines.map((routine: any) => (
+                        <div 
+                          key={routine.id}
+                          id={`routine-row-${routine.id}`}
+                          className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800/60"
+                        >
+                          <div className="space-y-1">
+                            <p className="text-xs font-extrabold text-slate-800 dark:text-white">{routine.title}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
+                              <span className="flex items-center gap-1">
+                                <Clock size={10} /> {routine.time}
+                              </span>
+                              •
+                              <span>
+                                {routine.days.length === 7 ? 'Every Day' : routine.days.map((d: number) => ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(', ')}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            id={`delete-routine-btn-${routine.id}`}
+                            onClick={() => handleDeleteRoutine(routine.id)}
+                            className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Form to add brand new routine */}
+                <form 
+                  id="add-routine-form"
+                  onSubmit={handleCreateRoutine} 
+                  className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-3xl border border-slate-200/50 dark:border-slate-800/40 space-y-4 shrink-0"
+                >
+                  <p className="text-[10px] font-black uppercase text-indigo-500 dark:text-indigo-400 tracking-wider">Add New Routine</p>
+
+                  <div className="space-y-3.5 text-xs">
+                    {/* Title Input */}
+                    <div className="space-y-1">
+                      <label className="text-slate-500 dark:text-slate-400 font-bold block">Routine Name</label>
+                      <input 
+                        id="new-routine-title-input"
+                        type="text" 
+                        placeholder="e.g. Evening Meditation"
+                        value={newRoutineTitle}
+                        onChange={(e) => setNewRoutineTitle(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 dark:text-white"
+                      />
+                    </div>
+
+                    {/* Time Input */}
+                    <div className="space-y-1">
+                      <label className="text-slate-500 dark:text-slate-400 font-bold block">Time</label>
+                      <input 
+                        id="new-routine-time-input"
+                        type="time" 
+                        value={newRoutineTime}
+                        onChange={(e) => setNewRoutineTime(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500 dark:text-white"
+                      />
+                    </div>
+
+                    {/* Day Selectors */}
+                    <div className="space-y-1">
+                      <label className="text-slate-500 dark:text-slate-400 font-bold block">Repeat Days</label>
+                      <div className="flex gap-1.5 justify-between">
+                        {['S','M','T','W','T','F','S'].map((day, idx) => {
+                          const active = newRoutineDays.includes(idx);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              id={`day-select-btn-${idx}`}
+                              onClick={() => {
+                                setNewRoutineDays(prev => 
+                                  prev.includes(idx) 
+                                    ? prev.filter(d => d !== idx)
+                                    : [...prev, idx]
+                                );
+                              }}
+                              className={cn(
+                                "w-8 h-8 rounded-lg font-bold text-[10px] transition-all cursor-pointer",
+                                active 
+                                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10" 
+                                  : "bg-white dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                              )}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      id="save-new-routine-btn"
+                      className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-xl shadow-indigo-600/10 transition-colors cursor-pointer mt-2"
+                    >
+                      Create Routine
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {confirmDialog.show && (
+          <motion.div 
+            id="custom-confirm-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-md z-[500] flex items-center justify-center p-6 select-none"
+            onClick={() => setConfirmDialog(prev => ({ ...prev, show: false }))}
+          >
+            <motion.div 
+              id="custom-confirm-modal"
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col gap-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{confirmDialog.title}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{confirmDialog.message}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 shrink-0">
+                <button 
+                  type="button"
+                  onClick={() => setConfirmDialog(prev => ({ ...prev, show: false }))} 
+                  className="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button"
+                  onClick={confirmDialog.onConfirm} 
+                  className="py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/10 active:scale-95 transition-all cursor-pointer"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </ToastContext.Provider>
   );
 }

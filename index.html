@@ -2,12 +2,60 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, shrink-to-fit=no" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="A premium, offline-first daily routine and productivity app." />
+    
+    <title>LifeFlow — Premium Routine & Productivity</title>
+    
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
   </head>
-  <body>
+  <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased duration-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          const host = window.location.hostname;
+          const isSandbox = host.includes('ais-dev') || host.includes('ais-pre') || host.includes('localhost') || host.includes('127.0.0.1');
+
+          if (isSandbox) {
+            // Clean up any registered service workers inside sandbox/preview to prevent stale page/auth bugs
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              if (registrations.length > 0) {
+                for (const registration of registrations) {
+                  registration.unregister().then(() => {
+                    console.log('Stale service worker unregistered in sandbox.');
+                  });
+                }
+                // Clear caches and reload once to restore normal direct-network page access
+                if ('caches' in window) {
+                  caches.keys().then((keys) => {
+                    Promise.all(keys.map(key => caches.delete(key))).then(() => {
+                      console.log('Sandbox caches cleared successfully.');
+                      window.location.reload();
+                    });
+                  });
+                }
+              }
+            });
+          } else {
+            // Register normally on production/custom domain for clean PWA installation
+            navigator.serviceWorker.register('/sw.js')
+              .then((registration) => {
+                console.log('LifeFlow Service Worker registered successfully:', registration.scope);
+              })
+              .catch((error) => {
+                console.error('LifeFlow Service Worker registration failed:', error);
+              });
+          }
+        });
+      }
+    </script>
   </body>
 </html>
 

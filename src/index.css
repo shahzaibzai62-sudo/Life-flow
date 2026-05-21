@@ -24,6 +24,15 @@
 }
 
 @layer base {
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
   html {
     @apply antialiased;
     font-size: 14px;
@@ -69,6 +78,25 @@
   .nav-blur {
     @apply bg-white/80 dark:bg-[#020617]/80 backdrop-blur-2xl border-t border-slate-100 dark:border-slate-900/50 transition-colors duration-500;
   }
+}
+
+/* Custom premium scrollbar style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3); /* slate-400 equivalent */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.5); /* indigo-600 with opacity */
 }
 
 @layer utilities {

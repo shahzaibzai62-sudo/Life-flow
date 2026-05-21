@@ -2,5 +2,5 @@
   "name": "LifeFlow",
   "description": "A premium, offline-first daily routine and productivity app. Manage tasks, schedules, shopping lists, and track your progress locally on your device.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

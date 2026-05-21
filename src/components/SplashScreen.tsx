@@ -8,12 +8,19 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [onFinish]);
+
   return (
     <motion.div
       initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: "easeInOut" }}
-      onAnimationComplete={onFinish}
       className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-gradient-to-br from-[#020617] via-[#0f172a] to-indigo-950"
     >
       <div className="relative">
